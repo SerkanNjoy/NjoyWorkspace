@@ -9,7 +9,8 @@ public class CameraController : MonoBehaviour
     {
         Camera cam = GetComponent<Camera>();
 
-        RenderTexture rt = new RenderTexture(Screen.width, Screen.height, 24);
+        RenderTextureDescriptor descriptor = new RenderTextureDescriptor(Screen.width, Screen.height, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB, 24);
+        RenderTexture rt = new RenderTexture(descriptor);
         rt.enableRandomWrite = true;
         rt.Create();
 

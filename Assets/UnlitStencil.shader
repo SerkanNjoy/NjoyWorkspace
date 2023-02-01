@@ -10,8 +10,9 @@ Shader "Universal Render Pipeline/2D/UnlitStencil"
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
         [HideInInspector] _AlphaTex ("External Alpha", 2D) = "white" {}
-        [HideInInspector] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
+        [HideInInspector] _EnableExternalAlpha("Enable External Alpha", Float) = 0
 
+        _DiscardAlpha("Discard Transparent Pixels", int) = 1
         _StencilRef("Stencil Ref", int) = 0
         _StencilComp("Stencil Comp", int) = 1
         _StencilOp("Stencil Op", int) = 0
@@ -73,6 +74,7 @@ Shader "Universal Render Pipeline/2D/UnlitStencil"
             half4 _MainTex_ST;
             float4 _Color;
             half4 _RendererColor;
+            int _DiscardAlpha;
 
             Varyings UnlitVertex(Attributes v)
             {
@@ -92,6 +94,8 @@ Shader "Universal Render Pipeline/2D/UnlitStencil"
             half4 UnlitFragment(Varyings i) : SV_Target
             {
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+
+                if (_DiscardAlpha == 1 && mainTex.w == 0) discard;
 
                 #if defined(DEBUG_DISPLAY)
                 SurfaceData2D surfaceData;
