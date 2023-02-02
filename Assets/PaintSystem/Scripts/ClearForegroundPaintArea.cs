@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 public class ClearForegroundPaintArea : PaintArea
 {
     [SerializeField] private SpriteRenderer foreground;
-    [SerializeField] private SpriteRenderer[] hiddenSprites;
+    IPaintable[] _paintables;
 
     public bool init = false;
 
@@ -20,6 +20,7 @@ public class ClearForegroundPaintArea : PaintArea
 
     public override void Init()
     {
+        SetPaintables();
         resultCam.Init(stencilReference);
         SetMaterials();
 
@@ -29,17 +30,27 @@ public class ClearForegroundPaintArea : PaintArea
         }));
     }
 
+    private void SetPaintables()
+    {
+        var components = transform.GetComponentsInChildren<IPaintable>();
+        _paintables = new IPaintable[components.Length];
+        for(int i = 0; i < _paintables.Length; i++)
+        {
+            _paintables[i] = components[i];
+        }
+    }
+
     private void SetMaterials()
     {
         foreground.material.SetInt("_StencilRef", stencilReference);
         foreground.material.SetInt("_DiscardAlpha", 0);
         foreground.material.renderQueue = (int)RenderQueue.Transparent + 1;
 
-        foreach(var sprite in hiddenSprites)
+        foreach(var paintable in _paintables)
         {
-            sprite.material.SetInt("_StencilRef", stencilReference);
-            sprite.material.SetInt("_DiscardAlpha", 1);
-            sprite.material.renderQueue = (int)RenderQueue.Transparent + 2;
+            paintable.Renderer.material.SetInt("_StencilRef", stencilReference);
+            paintable.Renderer.material.SetInt("_DiscardAlpha", 1);
+            paintable.Renderer.material.renderQueue = (int)RenderQueue.Transparent + 2;
         }
     }
 
@@ -53,6 +64,16 @@ public class ClearForegroundPaintArea : PaintArea
     [ContextMenu("Progress")]
     public void GetProgress()
     {
-        Debug.Log(Progress);
+        float progress = Progress;
+
+        Debug.Log(progress);
+
+        if(progress >= 1.0f)
+        {
+            foreach(var item in _paintables)
+            {
+                item.OnFullyPainted();
+            }
+        }
     }
 }
