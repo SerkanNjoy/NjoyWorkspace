@@ -1,0 +1,42 @@
+#pragma kernel CSMain
+
+RWTexture2D<float4> Source;
+RWTexture2D<float4> Result;
+
+float InputCoordX;
+float InputCoordY;
+
+uint Width;
+uint Height;
+
+float2 ThreadIDToTextureCoord(uint3 id)
+{
+    return float2(id.x / (float)Width, id.y / (float)Height);
+}
+
+float DistanceToCoord(uint3 id)
+{
+    float2 coord = ThreadIDToTextureCoord(id);
+    return distance(coord, float2(InputCoordX, InputCoordY));
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x < Width && id.y < Height)
+    {
+        float distance = DistanceToCoord(id);
+
+        if(distance < 0.14)
+        {
+            float4 pixel = Source[id.xy];
+            //float4 newPixel = float4(pixel.x, pixel.y, pixel.z, pixel.w - (0.14 - distance));
+            float4 newPixel = float4(pixel.x, pixel.y, pixel.z, 0);
+            Result[id.xy] = newPixel;
+        }
+        else
+        {
+            Result[id.xy] = Source[id.xy];
+        }
+    }
+}
