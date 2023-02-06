@@ -1,12 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Rendering;
+using System.Collections;
+using Unity.VisualScripting;
 
 public class Test : MonoBehaviour
 {
     [SerializeField] private ComputeShader changerShader;
 
     public SpriteRenderer spriteRenderer;
+    public MeshRenderer quadRenderer;
 
     public Sprite sourceSprite;
 
@@ -14,19 +17,23 @@ public class Test : MonoBehaviour
 
     public float timeBtwPerPaint = 0.05f;
 
-    private Rect _resultRect;
-    private Texture2D _resultTexture;
+    public bool UseSprite = true;
+    public bool SourceTexture = true;
+
+    private Rect _sourceTextureRect;
+    private Texture2D _generatedTexture;
+    private Texture2D _sourceTexture;
 
     RenderTextureDescriptor descriptor;
     RenderTexture source;
     RenderTexture result;
+    Material quadMaterial;
 
     private TextureFormat _textureFormat;
 
     int fpsCount;
     float fpsTimer;
     float _lastPaintTime;
-    Color[] _pixels;
 
     bool _initialized;
 
@@ -45,7 +52,7 @@ public class Test : MonoBehaviour
     {
         Debug.Log("Processor Count => " + SystemInfo.processorCount);
 
-        GenerateData();
+        Initialize();
     }
 
     private void Update()
@@ -60,15 +67,22 @@ public class Test : MonoBehaviour
         }
     }
 
-    public void GenerateData()
+    [ContextMenu("Init")]
+    public void Initialize()
     {
-        _resultRect = sourceSprite.textureRect;
-        _resultTexture = new Texture2D((int)_resultRect.width, (int)_resultRect.height, _textureFormat, false);
-        _pixels = sourceSprite.texture.GetPixels((int)_resultRect.x, (int)_resultRect.y, (int)_resultRect.width, (int)_resultRect.height);
-        _resultTexture.SetPixels(_pixels);
-        _resultTexture.Apply();
+        _initialized = true;
+        quadMaterial = quadRenderer.material;
 
-        descriptor = new RenderTextureDescriptor((int)_resultRect.width, (int)_resultRect.height, GraphicsFormat.R8G8B8A8_UNorm, 24);
+        _sourceTextureRect = sourceSprite.textureRect;
+        _generatedTexture = new Texture2D((int)_sourceTextureRect.width, (int)_sourceTextureRect.height, _textureFormat, false);
+        _sourceTexture = new Texture2D((int)_sourceTextureRect.width, (int)_sourceTextureRect.height, _textureFormat, false);
+        var pixels = sourceSprite.texture.GetPixels((int)_sourceTextureRect.x, (int)_sourceTextureRect.y, (int)_sourceTextureRect.width, (int)_sourceTextureRect.height);
+        _generatedTexture.SetPixels(pixels);
+        _sourceTexture.SetPixels(pixels);
+        _generatedTexture.Apply();
+        _sourceTexture.Apply();
+
+        descriptor = new RenderTextureDescriptor((int)_sourceTextureRect.width, (int)_sourceTextureRect.height, GraphicsFormat.R8G8B8A8_UNorm, 24);
         source = new RenderTexture(descriptor);
         source.enableRandomWrite = true;
         source.Create();
@@ -76,6 +90,11 @@ public class Test : MonoBehaviour
         result = new RenderTexture(descriptor);
         result.enableRandomWrite = true;
         result.Create();
+
+        quadRenderer.transform.localScale = spriteRenderer.bounds.size;
+        quadMaterial.SetTexture("_BaseMap", _generatedTexture);
+
+        quadRenderer.transform.AddComponent<BoxCollider2D>();
     }
 
     public void Change(Vector2 textureCoord)
@@ -84,31 +103,22 @@ public class Test : MonoBehaviour
 
         _lastPaintTime = Time.realtimeSinceStartup;
 
-        if (!_initialized)
-        {
-            _initialized = true;
-            _resultRect = sourceSprite.textureRect;
-            _resultTexture = new Texture2D((int)_resultRect.width, (int)_resultRect.height, _textureFormat, false);
-            _pixels = sourceSprite.texture.GetPixels((int)_resultRect.x, (int)_resultRect.y, (int)_resultRect.width, (int)_resultRect.height);
-            _resultTexture.SetPixels(_pixels);
-            _resultTexture.Apply();
-        }
+        if (!_initialized) Initialize();
 
-        var sourceRect = sourceSprite.textureRect;
-        var resultTexture = new Texture2D((int)sourceRect.width, (int)sourceRect.height, _textureFormat, false);
-        resultTexture.SetPixels(_resultTexture.GetPixels());
-        resultTexture.Apply();
+        StartCoroutine(WaitForFrame(textureCoord));
 
-        Graphics.Blit(resultTexture, source);
+        return;
 
-        int workerGroupsX = Mathf.CeilToInt((int)_resultRect.width / 8f);
-        int workerGroupsY = Mathf.CeilToInt((int)_resultRect.height / 8f);
+        Graphics.Blit(_sourceTexture, source);
+
+        int workerGroupsX = Mathf.CeilToInt((int)_sourceTextureRect.width / 8f);
+        int workerGroupsY = Mathf.CeilToInt((int)_sourceTextureRect.height / 8f);
 
         changerShader.SetTexture(0, "Source", source);
         changerShader.SetTexture(0, "Result", result);
 
-        changerShader.SetInt("Width", (int)_resultRect.width);
-        changerShader.SetInt("Height", (int)_resultRect.height);
+        changerShader.SetInt("Width", (int)_sourceTextureRect.width);
+        changerShader.SetInt("Height", (int)_sourceTextureRect.height);
 
         changerShader.SetFloat("InputCoordX", textureCoord.x);
         changerShader.SetFloat("InputCoordY", textureCoord.y);
@@ -117,12 +127,70 @@ public class Test : MonoBehaviour
 
         RenderTexture.active = result;
 
-        _resultTexture = new Texture2D(result.width, result.height, _textureFormat, false);
-        _resultTexture.ReadPixels(new Rect(0, 0, result.width, result.height), 0, 0, false);
-        _resultTexture.Apply();
+        //_generatedTexture = new Texture2D(result.width, result.height, _textureFormat, false);
+        _generatedTexture.ReadPixels(new Rect(0, 0, result.width, result.height), 0, 0, false);
+        _generatedTexture.Apply();
 
         RenderTexture.active = null;
 
-        spriteRenderer.sprite = Sprite.Create(_resultTexture, new Rect(0, 0, _resultTexture.width, _resultTexture.height), new Vector2(0.5f, 0.5f));
+        if (UseSprite)
+        {
+            spriteRenderer.enabled = true;
+            quadRenderer.enabled = false;
+            spriteRenderer.sprite = Sprite.Create(_generatedTexture, new Rect(0, 0, _generatedTexture.width, _generatedTexture.height), new Vector2(0.5f, 0.5f));
+        }
+        else
+        {
+            spriteRenderer.enabled = false;
+            quadRenderer.enabled = true;
+            quadMaterial.SetTexture("_BaseMap", _generatedTexture);
+        }
+    }
+
+    private IEnumerator WaitForFrame(Vector2 textureCoord)
+    {
+        
+        if(SourceTexture) Graphics.Blit(_sourceTexture, source);
+        else Graphics.Blit(_generatedTexture, source);
+
+
+
+
+        int workerGroupsX = Mathf.CeilToInt((int)_sourceTextureRect.width / 8f);
+        int workerGroupsY = Mathf.CeilToInt((int)_sourceTextureRect.height / 8f);
+
+        changerShader.SetTexture(0, "Source", source);
+        changerShader.SetTexture(0, "Result", result);
+
+        changerShader.SetInt("Width", (int)_sourceTextureRect.width);
+        changerShader.SetInt("Height", (int)_sourceTextureRect.height);
+
+        changerShader.SetFloat("InputCoordX", textureCoord.x);
+        changerShader.SetFloat("InputCoordY", textureCoord.y);
+
+        changerShader.Dispatch(0, workerGroupsX, workerGroupsY, 1);
+
+        RenderTexture.active = result;
+
+        //_generatedTexture = new Texture2D(result.width, result.height, _textureFormat, false);
+        _generatedTexture.ReadPixels(new Rect(0, 0, result.width, result.height), 0, 0, false);
+        _generatedTexture.Apply();
+
+        RenderTexture.active = null;
+
+        yield return new WaitForEndOfFrame();
+
+        if (UseSprite)
+        {
+            spriteRenderer.enabled = true;
+            quadRenderer.enabled = false;
+            spriteRenderer.sprite = Sprite.Create(_generatedTexture, new Rect(0, 0, _generatedTexture.width, _generatedTexture.height), new Vector2(0.5f, 0.5f));
+        }
+        else
+        {
+            spriteRenderer.enabled = false;
+            quadRenderer.enabled = true;
+            quadMaterial.SetTexture("_BaseMap", _generatedTexture);
+        }
     }
 }

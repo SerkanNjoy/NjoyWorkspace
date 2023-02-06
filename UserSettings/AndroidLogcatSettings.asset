@@ -3,7 +3,7 @@
     "m_SelectedPackage": {
         "deviceId": "HVA3N21E",
         "name": "com.DefaultCompany.Test",
-        "processId": 4399,
+        "processId": 24364,
         "exited": false
     },
     "m_SelectedPriority": 0,
@@ -60,6 +60,48 @@
             "deviceId": "HVA3N21E",
             "name": "com.DefaultCompany.Test",
             "processId": 4399,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 17295,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 20229,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 22055,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 23265,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 23688,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 23962,
+            "exited": false
+        },
+        {
+            "deviceId": "HVA3N21E",
+            "name": "com.DefaultCompany.Test",
+            "processId": 24364,
             "exited": false
         }
     ],

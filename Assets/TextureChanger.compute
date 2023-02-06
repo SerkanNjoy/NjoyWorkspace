@@ -30,8 +30,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         if(distance < 0.14)
         {
             float4 pixel = Source[id.xy];
-            //float4 newPixel = float4(pixel.x, pixel.y, pixel.z, pixel.w - (0.14 - distance));
-            float4 newPixel = float4(pixel.x, pixel.y, pixel.z, 0);
+            float4 newPixel = float4(pixel.x, pixel.y, pixel.z, pixel.w - (0.14 - distance));
             Result[id.xy] = newPixel;
         }
         else
