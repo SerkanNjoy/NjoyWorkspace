@@ -31,7 +31,7 @@ public class PaintAreaResultCam
         SetTransforms();
         SetMaterials(StencilRef);
 
-        RenderTextureDescriptor descriptor = new RenderTextureDescriptor(Screen.width, Screen.height, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB, 24);
+        RenderTextureDescriptor descriptor = new RenderTextureDescriptor(Screen.width, Screen.height, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, 24);
         _rt = new RenderTexture(descriptor);
         _rt.enableRandomWrite = true;
         _rt.Create();
@@ -98,7 +98,7 @@ public class PaintAreaResultCam
 
     private void SetMaterials(int StencilRef)
     {
-        resultExposerSprite.material.SetInt("_StencilRef", StencilRef + 1);
+        resultExposerSprite.material.SetInt("_StencilRef", StencilRef + 2);
         resultExposerSprite.material.SetInt("_DiscardAlpha", 0);
         resultExposerSprite.material.renderQueue = (int)RenderQueue.Transparent + 3;
 

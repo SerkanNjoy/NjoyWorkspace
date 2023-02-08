@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: mat_Stencil_Soil
+  m_Name: mat_Stencil_Crack
   m_Shader: {fileID: 4800000, guid: 4439e30f46cec744b9f0ee0dcfa4fe4f, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -28,15 +28,22 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - PixelSnap: 0
-    - _DiscardAlpha: 0
+    - _DiscardAlpha: 1
     - _EnableExternalAlpha: 0
-    - _MinAlpha: 0
-    - _StencilComp: 5
-    - _StencilOp: 0
-    - _StencilRef: 0
+    - _StencilComp: 3
+    - _StencilOp: 3
+    - _StencilRef: 5
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}

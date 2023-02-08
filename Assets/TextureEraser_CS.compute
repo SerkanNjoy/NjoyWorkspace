@@ -1,6 +1,5 @@
 #pragma kernel CSMain
 
-RWTexture2D<float4> Source;
 RWTexture2D<float4> Result;
 
 float InputCoordX;
@@ -29,13 +28,9 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
         if(distance < 0.14)
         {
-            float4 pixel = Source[id.xy];
+            float4 pixel = Result[id.xy];
             float4 newPixel = float4(pixel.x, pixel.y, pixel.z, pixel.w - (0.14 - distance));
             Result[id.xy] = newPixel;
-        }
-        else
-        {
-            Result[id.xy] = Source[id.xy];
         }
     }
 }

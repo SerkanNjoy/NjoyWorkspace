@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 public class ClearForegroundPaintArea : PaintArea
 {
     [SerializeField] private SpriteRenderer foreground;
-    IPaintable[] _paintables;
+    IDigable[] _digables;
 
     public bool init = false;
 
@@ -20,7 +20,7 @@ public class ClearForegroundPaintArea : PaintArea
 
     public override void Init()
     {
-        SetPaintables();
+        SetDigables();
         resultCam.Init(stencilReference);
         SetMaterials();
 
@@ -30,13 +30,13 @@ public class ClearForegroundPaintArea : PaintArea
         }));
     }
 
-    private void SetPaintables()
+    private void SetDigables()
     {
-        var components = transform.GetComponentsInChildren<IPaintable>();
-        _paintables = new IPaintable[components.Length];
-        for(int i = 0; i < _paintables.Length; i++)
+        var components = transform.GetComponentsInChildren<IDigable>();
+        _digables = new IDigable[components.Length];
+        for(int i = 0; i < _digables.Length; i++)
         {
-            _paintables[i] = components[i];
+            _digables[i] = components[i];
         }
     }
 
@@ -46,11 +46,19 @@ public class ClearForegroundPaintArea : PaintArea
         foreground.material.SetInt("_DiscardAlpha", 0);
         foreground.material.renderQueue = (int)RenderQueue.Transparent + 1;
 
-        foreach(var paintable in _paintables)
+        foreach(var paintable in _digables)
         {
             paintable.Renderer.material.SetInt("_StencilRef", stencilReference);
             paintable.Renderer.material.SetInt("_DiscardAlpha", 1);
-            paintable.Renderer.material.renderQueue = (int)RenderQueue.Transparent + 2;
+            paintable.Renderer.material.renderQueue = (int)RenderQueue.Transparent + 1;
+        }
+    }
+
+    private void HideDigables()
+    {
+        foreach(var digable in _digables)
+        {
+            digable.OnHidden();
         }
     }
 
@@ -70,9 +78,9 @@ public class ClearForegroundPaintArea : PaintArea
 
         if(progress >= 1.0f)
         {
-            foreach(var item in _paintables)
+            foreach(var item in _digables)
             {
-                item.OnFullyPainted();
+                item.OnFullyDigged();
             }
         }
     }
